@@ -2,7 +2,6 @@
     "name": "activityfinder-discord-bot",
     "version": "1.0.0",
     "main": "start.js",
-    "type": "module",
     "scripts": {
       "start": "node start.js"
     },
