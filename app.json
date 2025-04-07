@@ -13,13 +13,19 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jish22.ActivityFinderReboot",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "We need access to your photos to allow you to upload a profile picture."
+      }
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.jish22.ActivityFinderReboot"
     },
     "web": {
       "favicon": "./assets/favicon.png"
