@@ -21,7 +21,7 @@ import {
   leaveOrganization,
   updateOrganizationProfileImage,
 } from "../services/organizationService";
-import { ORG_AVATAR_IMAGES } from "../constants/constants";
+import { ORG_AVATAR_IMAGES, AVATAR_IMAGES } from "../constants/constants";
 import { getUserDetailsByUID } from "../services/firebaseConfig";
 import { getEventDetails, deleteEvent, getPastEvents } from "../services/eventService";
 import { auth } from "../services/firebaseConfig";
@@ -350,12 +350,13 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
             <Text style={styles.sectionTitle}>Admins</Text>
             {organization.admins.map((adminId: string) => (
               <View key={adminId} style={styles.memberCard}>
-                      <Image
-                    source={{
-                      uri: adminImages[adminId] || "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                    }}
-                    style={styles.profileImageSmall}
-                  />
+                <Image
+                  source={
+                    AVATAR_IMAGES[adminImages[adminId]] ||
+                    ORG_AVATAR_IMAGES[adminImages[adminId]] ||
+                    require("../assets/avatars/default-avatar.png")}
+                  style={styles.profileImageSmall}
+                />
                 <Text style={styles.memberName}>{adminNames[adminId] || "Loading..."}</Text>
                 <View style={styles.memberActions}>
                   {isSuperAdmin && adminId !== userNetID && (
@@ -385,12 +386,14 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
               .filter((member: string) => !organization.admins.includes(member))
               .map((memberId: string) => (
                 <View key={memberId} style={styles.memberCard}>
-                  <Image
-                    source={{
-                      uri: memberImages[memberId] || "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                    }}
-                    style={styles.profileImageSmall}
-                  />
+                    <Image
+                      source={
+                        AVATAR_IMAGES[memberImages[memberId]] ||
+                        ORG_AVATAR_IMAGES[memberImages[memberId]] ||
+                        require("../assets/avatars/default-avatar.png")
+                      }
+                      style={styles.profileImageSmall}
+                    />
                   <Text style={styles.memberName}>{memberNames[memberId] || "Loading..."}</Text>
                   {isAdmin && (
                     <TouchableOpacity
