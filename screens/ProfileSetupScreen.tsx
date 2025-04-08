@@ -74,43 +74,44 @@ const ProfileSetupScreen = ({ navigation }: any) => {
   };
 
   const handleSaveProfile = async () => {
-    // Keeping existing save profile logic
     if (!firstName || !lastName || !graduationYear) {
       Alert.alert("Error", "Please fill all required fields");
       return;
     }
-
+  
     if (!validateNetID()) {
       Alert.alert("Error", errorMessage);
       return;
     }
-
+  
     const userId = auth.currentUser?.uid;
     if (!userId) {
       Alert.alert("Error", "User not logged in");
       return;
     }
-
+  
     const fullName = `${firstName} ${lastName}`.toLowerCase();
-
-
-    const profileData = {
-      firstName,
-      lastName,
-      fullName,
-      // gender,
-      graduationYear,
-      email,
-      netID,
-      profileImage,
-      interests,
-      pendingFriendRequests: [],
-      friends: [],
-      joinedOrganizations:[]
-    };
-
+  
     try {
+      const existingProfile = await getUserProfile(userId);
+  
+      const profileData = {
+        firstName,
+        lastName,
+        fullName,
+        graduationYear,
+        email,
+        netID,
+        profileImage,
+        interests,
+        // ✅ Preserve existing arrays if user already exists
+        pendingFriendRequests: existingProfile?.pendingFriendRequests ?? [],
+        friends: existingProfile?.friends ?? [],
+        joinedOrganizations: existingProfile?.joinedOrganizations ?? [],
+      };
+  
       await saveUserProfile(userId, profileData);
+  
       Alert.alert("Success", "Profile saved successfully!", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);

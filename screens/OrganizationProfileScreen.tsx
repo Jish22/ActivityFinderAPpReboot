@@ -10,6 +10,7 @@ import {
   TextInput,
   SafeAreaView,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import {
   getOrganizationDetails,
@@ -30,6 +31,8 @@ import * as ImagePicker from "expo-image-picker";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
 
+const PAGE_SIZE = 10;
+
 
 const OrganizationProfileScreen = ({ route, navigation }: any) => {
   const { org } = route.params;
@@ -47,80 +50,60 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"upcoming" | "past">("upcoming");
   const [pastEvents, setPastEvents] = useState<any[]>([]);
-  
+  const [refreshing, setRefreshing] = useState(false);
 
+  const fetchOrganization = async () => {
+    setRefreshing(true);
+    const orgDetails = await getOrganizationDetails(org.id);
+    if (orgDetails) {
+      setOrganization(orgDetails);
+      setBioText(orgDetails.bio || "");
+      setIsAdmin(orgDetails.admins.includes(userNetID ?? ""));
+      setIsSuperAdmin(orgDetails.superAdmin === userNetID);
+      setProfileImage(orgDetails.profileImage || null);
+  
+      const adminPromises = orgDetails.admins.map(async (netID: string) => {
+        const user = await getUserDetailsByUID(netID);
+        return {
+          netID,
+          fullName: user?.fullName,
+          profileImage: user?.profileImage,
+        };
+      });
+  
+      const memberPromises = orgDetails.members.map(async (netID: string) => {
+        const user = await getUserDetailsByUID(netID);
+        return {
+          netID,
+          fullName: user?.fullName,
+          profileImage: user?.profileImage,
+        };
+      });
+  
+      const adminResults = await Promise.all(adminPromises);
+      const memberResults = await Promise.all(memberPromises);
+  
+      setAdminNames(Object.fromEntries(adminResults.map(({ netID, fullName }) => [netID, fullName])));
+      setMemberNames(Object.fromEntries(memberResults.map(({ netID, fullName }) => [netID, fullName])));
+      setAdminImages(Object.fromEntries(adminResults.map(({ netID, profileImage }) => [netID, profileImage])));
+      setMemberImages(Object.fromEntries(memberResults.map(({ netID, profileImage }) => [netID, profileImage])));
+  
+      const eventPromises = orgDetails.events.map(getEventDetails);
+      const events = await Promise.all(eventPromises);
+      const now = new Date();
+  
+      const upcoming = events.filter(e => new Date(e.endTime).getTime() >= now.getTime())
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      const past = events.filter(e => new Date(e.endTime).getTime() < now.getTime())
+        .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  
+      setEventDetails(upcoming);
+      setPastEvents(past);
+    }
+    setRefreshing(false);
+  };
+  
   useEffect(() => {
-    const fetchOrganization = async () => {
-      const orgDetails = await getOrganizationDetails(org.id);
-      if (orgDetails) {
-        setOrganization(orgDetails);
-        setBioText(orgDetails.bio || "");
-        setIsAdmin(orgDetails.admins.includes(userNetID ?? ""));
-        setIsSuperAdmin(orgDetails.superAdmin === userNetID);
-        setProfileImage(orgDetails.profileImage || null); 
-
-  
-        const adminPromises = orgDetails.admins.map(async (netID: string) => {
-          const user = await getUserDetailsByUID(netID);
-          const fullName = user?.fullName
-          // const fullName = await getUserFullName(netID);
-          const profileImage = user?.profileImage; 
-
-          return { netID, fullName, profileImage };
-        });
-  
-        const memberPromises = orgDetails.members.map(async (netID: string) => {
-          const user = await getUserDetailsByUID(netID);
-
-          const fullName = user?.fullName
-          const profileImage = user?.profileImage; 
-
-          return { netID, fullName, profileImage };
-        });
-  
-        const adminResults = await Promise.all(adminPromises);
-        const memberResults = await Promise.all(memberPromises);
-  
-        setAdminNames(Object.fromEntries(adminResults.map(({ netID, fullName }) => [netID, fullName])));
-        setMemberNames(Object.fromEntries(memberResults.map(({ netID, fullName }) => [netID, fullName])));
-  
-
-        setAdminImages(Object.fromEntries(adminResults.map(({ netID, profileImage }) => [netID, profileImage])));
-        setMemberImages(Object.fromEntries(memberResults.map(({ netID, profileImage }) => [netID, profileImage])));
-
-        const eventPromises = orgDetails.events.map(async (eventId: string) => {
-          const event = await getEventDetails(eventId);
-          return event;
-        });
-  
-        const events = await Promise.all(eventPromises);
-        const now = new Date();
-  
-        const upcomingEvents = events
-          .filter(
-            (event) => event?.endTime && new Date(event.endTime).getTime() >= now.getTime()
-          )
-          .sort(
-            (a, b) =>
-              new Date(a.startTime ?? Number.MAX_SAFE_INTEGER).getTime() -
-              new Date(b.startTime ?? Number.MAX_SAFE_INTEGER).getTime()
-          );
-  
-        const pastEvents = events
-          .filter(
-            (event) => event?.endTime && new Date(event.endTime).getTime() < now.getTime()
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.startTime ?? Number.MAX_SAFE_INTEGER).getTime() -
-              new Date(a.startTime ?? Number.MAX_SAFE_INTEGER).getTime()
-          );
-  
-        setEventDetails(upcomingEvents);
-        setPastEvents(pastEvents);
-      }
-    };
-  
     fetchOrganization();
   }, []);
 
@@ -198,10 +181,19 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={fetchOrganization}
+              colors={["#256E51"]}
+              tintColor="#256E51"
+            />
+          }
         >
+
         <View style={styles.profileSection}>
           <View style={styles.imageContainer}>
               <Image

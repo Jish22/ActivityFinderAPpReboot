@@ -39,41 +39,44 @@ const EditEventScreen = ({ route, navigation }: any) => {
 
   const handleSaveChanges = async () => {
     const selectedDate = new Date(updatedEvent.date);
-
-    // Parse existing startTime and endTime
-    const startDateTime = new Date(updatedEvent.startTime);
-    const endDateTime = new Date(updatedEvent.endTime);
-
-    // Ensure correct date is assigned while keeping time
-    startDateTime.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-    endDateTime.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-
+  
     const createDateTime = (baseDate: string, timeStr: string) => {
-      const date = new Date(baseDate); // baseDate is like '2024-04-01'
-      const time = new Date(timeStr);  // ISO string like '2024-04-01T16:30:00.000Z'
-    
-      const combined = new Date(
+      const date = new Date(baseDate);
+      const time = new Date(timeStr);
+  
+      return new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate(),
         time.getHours(),
         time.getMinutes()
       );
-    
-      return combined.toISOString(); // Safely convert to UTC
     };
-
+  
+    const start = createDateTime(updatedEvent.date, updatedEvent.startTime);
+    const end = createDateTime(updatedEvent.date, updatedEvent.endTime);
+    const now = new Date();
+  
+    // 👇 Check if start or end time is in the past
+    if (start < now || end < now) {
+      Alert.alert("Invalid Time", "You cannot schedule an event in the past.");
+      return;
+    }
+  
+    // 👇 Optional: Check if end is before start
+    if (end <= start) {
+      Alert.alert("Invalid Time", "End time must be after start time.");
+      return;
+    }
+  
     const convertLocalToUtcISOString = (date: string, time: string, timeZone = "America/Chicago") => {
       const dateObj = new Date(date);
       const timeObj = new Date(time);
-    
-      // Combine date + time into one string like "2024-04-01T10:00:00"
-      const localDateTimeStr = `${date}T${timeObj.toTimeString().split(" ")[0]}`; // e.g., "2024-04-01T10:30:00"
-    
+      const localDateTimeStr = `${date}T${timeObj.toTimeString().split(" ")[0]}`;
       const utcDate = fromZonedTime(localDateTimeStr, timeZone);
       return utcDate.toISOString();
     };
-    
+  
     setLoading(true);
     try {
       await editEvent(event.id, {
@@ -81,8 +84,9 @@ const EditEventScreen = ({ route, navigation }: any) => {
         date: updatedEvent.date,
         startTime: convertLocalToUtcISOString(updatedEvent.date, updatedEvent.startTime),
         endTime: convertLocalToUtcISOString(updatedEvent.date, updatedEvent.endTime),
-        categories: event.categories, // Keep the original categories
+        categories: event.categories,
       });
+  
       Alert.alert("Success", "Event updated.");
       navigation.goBack();
     } catch (error) {
@@ -91,7 +95,6 @@ const EditEventScreen = ({ route, navigation }: any) => {
       setLoading(false);
     }
   };
-
   const handleDeleteEvent = async () => {
     Alert.alert("Confirm", "Are you sure you want to delete this event?", [
       {

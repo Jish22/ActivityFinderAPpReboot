@@ -63,20 +63,14 @@ const EventViewScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     const fetchAttendees = async () => {
-      if (isEventCreator || isOrgAdmin) {
-
+      if (event.id) {
         const attendeesList = await getEventAttendees(event.id);
-
         setAttendees(attendeesList);
-      } else {
-        console.warn("⚠️ User is NOT authorized to fetch attendees.");
       }
     };
-
-    if (event.id) {
-      fetchAttendees();
-    }
-  }, [event.id, isEventCreator, isOrgAdmin]); 
+  
+    fetchAttendees();
+  }, [event.id]);
 
   const convertToCTTime = (utcTime: string) => {
     const timeZone = "America/Chicago";
@@ -202,7 +196,7 @@ const EventViewScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          {(isEventCreator || isOrgAdmin) && attendees.length > 0 && (
+          {attendees.length > 0 && (
             <View style={styles.attendeesSection}>
               <Text style={styles.sectionTitle}>Attendees</Text>
               {attendees.map((attendee) => (

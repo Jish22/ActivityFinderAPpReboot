@@ -22,10 +22,9 @@ export const storage = getStorage(app);
 
 export const saveUserProfile = async (userId: string, profileData: any) => {
   try {
-    // Ensure netID is lowercase before saving
     const normalizedProfileData = {
       ...profileData,
-      netID: profileData.netID?.toLowerCase(), // Normalize netID if it exists
+      netID: profileData.netID?.toLowerCase(), 
       email: profileData.email?.toLowerCase(),
     };
 
