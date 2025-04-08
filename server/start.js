@@ -1,5 +1,7 @@
-require("dotenv").config(); // Load environment variables
-const { Client, GatewayIntentBits } = require("discord.js");
+import dotenv from "dotenv";
+dotenv.config();
+
+import { Client, GatewayIntentBits } from "discord.js";
 import { db } from "./firebaseAdmin.js";
 
 const botToken = process.env.DISCORD_BOT_TOKEN;
