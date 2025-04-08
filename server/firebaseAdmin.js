@@ -2,7 +2,7 @@ import admin from "firebase-admin";
 import { readFileSync } from "fs";
 
 // Load service account credentials from environment variable
-const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
 if (!admin.apps.length) {
   admin.initializeApp({
