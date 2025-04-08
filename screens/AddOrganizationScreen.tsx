@@ -8,12 +8,15 @@ import {
   StyleSheet,
   Alert,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import {
   getOrganizations,
   requestToJoinOrganization,
   cancelJoinRequest, 
   getUserOrgStatus,
+  getPaginatedOrganizations
 } from "../services/organizationService";
 import { auth } from "../services/firebaseConfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -23,38 +26,44 @@ const AddOrganizationScreen = ({ navigation }: any) => {
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [userStatuses, setUserStatuses] = useState<{ [key: string]: string }>({});
   const netID: string = auth.currentUser?.uid ?? "";
+  const [lastVisible, setLastVisible] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchOrganizations = async (loadMore = false) => {
+    if (loadingMore || (!hasMore && loadMore)) return;
+  
+    setLoadingMore(true);
+    try {
+      const result = await getPaginatedOrganizations(10, loadMore ? lastVisible : null);
+      const newOrgs = result.organizations;
+  
+      const sortedOrgs = newOrgs.sort((a, b) => a.name?.localeCompare(b.name));
+      const updatedOrgs = loadMore ? [...organizations, ...sortedOrgs] : sortedOrgs;
+  
+      setOrganizations(updatedOrgs);
+      setLastVisible(result.lastVisible);
+      setHasMore(newOrgs.length === 10);
+  
+      const statuses = await Promise.all(updatedOrgs.map(async (org) => {
+        const status = await getUserOrgStatus(org.id, netID);
+        return { orgId: org.id, status: status.status };
+      }));
+  
+      const statusMap = Object.fromEntries(statuses.map(({ orgId, status }) => [orgId, status]));
+      setUserStatuses(statusMap);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+  
+
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const orgs = await getOrganizations();
-  
-        const sortedOrgs = orgs.sort((a, b) => {
-          const nameA = a.name?.toLowerCase() || "";
-          const nameB = b.name?.toLowerCase() || "";
-          return nameA.localeCompare(nameB);
-        });
-  
-        setOrganizations(sortedOrgs);
-  
-        const statusPromises = sortedOrgs.map(async (org) => {
-          const status = await getUserOrgStatus(org.id, netID);
-          return { orgId: org.id, status: status.status };
-        });
-  
-        const statuses = await Promise.all(statusPromises);
-        const statusMap: { [key: string]: string } = {};
-        statuses.forEach(({ orgId, status }) => {
-          statusMap[orgId] = status;
-        });
-  
-        setUserStatuses(statusMap);
-      } catch (error) {
-        console.error("Error fetching organizations:", error);
-      }
-    };
-  
-    fetchData();
+    fetchOrganizations();
   }, []);
 
   const handleJoinRequest = async (orgId: string) => {
@@ -75,6 +84,12 @@ const AddOrganizationScreen = ({ navigation }: any) => {
     } catch (error) {
       Alert.alert("Error", "Failed to cancel request.");
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrganizations(false); 
+    setRefreshing(false);
   };
 
   const renderItem = ({ item }: { item: any }) => {
@@ -152,6 +167,17 @@ const AddOrganizationScreen = ({ navigation }: any) => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          onEndReached={() => fetchOrganizations(true)}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={["#256E51"]}
+              tintColor="#256E51"
+            />
+          }
         />
 
         <TouchableOpacity

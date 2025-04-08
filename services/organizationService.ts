@@ -1,4 +1,4 @@
-import { collection, getDocs, setDoc, doc, updateDoc, arrayUnion, deleteDoc,arrayRemove, getDoc } from "firebase/firestore";
+import { collection, getDocs, setDoc, orderBy, limit, startAfter, query, doc, updateDoc, arrayUnion, deleteDoc,arrayRemove, getDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 export const getOrganizations = async () => {
@@ -10,6 +10,33 @@ export const getOrganizations = async () => {
     }));
   } catch (error) {
     console.error("Error fetching organizations:", error);
+    throw error;
+  }
+};
+
+
+export const getPaginatedOrganizations = async (pageSize = 10, lastVisible: any = null) => {
+  try {
+    let orgQuery = query(collection(db, "organizations"), orderBy("name"), limit(pageSize));
+
+    if (lastVisible) {
+      orgQuery = query(orgQuery, startAfter(lastVisible));
+    }
+
+    const snapshot = await getDocs(orgQuery);
+    const organizations = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+    return {
+      organizations,
+      lastVisible: lastDoc,
+    };
+  } catch (error) {
+    console.error("Error fetching paginated organizations:", error);
     throw error;
   }
 };
