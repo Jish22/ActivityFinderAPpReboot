@@ -14,28 +14,24 @@ import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import { saveUserProfile, getUserProfile } from "../services/firebaseConfig";
 import { auth } from "../services/firebaseConfig";
-import { INTEREST_CATEGORIES } from "../constants/constants";
+import { INTEREST_CATEGORIES, AVATAR_IMAGES } from "../constants/constants";
 import { signOut } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import Firebase Storage
-// import uuid from "react-native-uuid"; 
-// import { arrowleft } from "@expo/vector-icons";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { v4 as uuidv4 } from 'uuid';
 
 
 const ProfileSetupScreen = ({ navigation }: any) => {
-  // Keeping all the existing state and functions
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  // const [gender, setGender] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
-  const [email, setEmail] = useState(auth.currentUser?.email || ""); // ✅ Fetch user email
+  const [email, setEmail] = useState(auth.currentUser?.email || ""); 
   const [netID, setNetID] = useState("");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string>("default-avatar.png");
   const [interests, setSelectedInterests] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
-  // Keeping all the existing useEffect and functions
   useEffect(() => {
     const fetchProfile = async () => {
       const userId = auth.currentUser?.uid;
@@ -48,7 +44,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
       if (userProfile) {
         setFirstName(userProfile.firstName || "");
         setLastName(userProfile.lastName || "");
-        // setGender(userProfile.gender || "");
         setGraduationYear(userProfile.graduationYear || "");
         setEmail(userProfile.email || "");
         setNetID(userProfile.netID || "");
@@ -78,66 +73,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
     return true;
   };
 
-
-  const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "We need access to your photos to upload a profile picture."
-      );
-      return;
-    }
-  
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-  
-    if (!result.canceled && result.assets.length > 0) {
-      const selectedImage = result.assets[0].uri;
-      await uploadImageToFirebase(selectedImage);
-    }
-  };
-  
-  const uploadImageToFirebase = async (imageUri: string) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-  
-    const storage = getStorage();
-    const imageId = uuidv4(); // Generate a unique image name
-    const storageRef = ref(storage, `profile_pictures/${userId}/${imageId}.jpg`);
-  
-    try {
-      // 🔥 Ensure the image is converted to a BLOB correctly
-      const response = await fetch(imageUri);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-  
-      const blob = await response.blob(); // Convert to blob
-  
-      // 🔥 Upload the blob
-      const snapshot = await uploadBytes(storageRef, blob);
-      // console.log("Upload successful:", snapshot);
-  
-      // 🔥 Get download URL after upload
-      const downloadURL = await getDownloadURL(storageRef);
-      setProfileImage(downloadURL); // Update state with the URL
-  
-      // console.log("Image uploaded, download URL:", downloadURL);
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      Alert.alert("Error", "Failed to upload image. Please try again.");
-      return null;
-    }
-  };
-
-
   const handleSaveProfile = async () => {
     // Keeping existing save profile logic
     if (!firstName || !lastName || !graduationYear) {
@@ -158,7 +93,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
 
     const fullName = `${firstName} ${lastName}`.toLowerCase();
 
-    const defaultAvatarUrl = "https://firebasestorage.googleapis.com/v0/b/activityfinderapp-7ba1e.firebasestorage.app/o/default-avatar.png?alt=media&token=8c3ad483-e787-4900-9a4c-85d0b1868f3c"
 
     const profileData = {
       firstName,
@@ -168,7 +102,7 @@ const ProfileSetupScreen = ({ navigation }: any) => {
       graduationYear,
       email,
       netID,
-      profileImage: profileImage || defaultAvatarUrl,
+      profileImage,
       interests,
       pendingFriendRequests: [],
       friends: [],
@@ -220,19 +154,41 @@ const ProfileSetupScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.imageContainer}>
-          <TouchableOpacity onPress={handlePickImage}>
-          <Image
-              source={{
-                uri: profileImage
-                  ? profileImage
-                  : "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-              }}
-            style={styles.profileImage}
+          <TouchableOpacity onPress={() => navigation.navigate("AvatarPickerScreen", {
+            selectedAvatar: profileImage,
+            onSelect: (avatar: string) => setProfileImage(avatar),
+          })}>
+            <Image
+              source={
+                AVATAR_IMAGES[profileImage]
+              }
+              style={styles.profileImage}
             />
             <View style={styles.editBadge}>
               <Text style={styles.editBadgeText}>Edit</Text>
             </View>
           </TouchableOpacity>
+        </View>
+
+        <View style={{ marginTop: 12 }}>
+          <Text style={{ fontWeight: "600", fontSize: 16, marginBottom: 8 }}>Choose an Avatar</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {Object.keys(AVATAR_IMAGES).map((filename) => (
+            <TouchableOpacity key={filename} onPress={() => setProfileImage(filename)}>
+              <Image
+                source={AVATAR_IMAGES[filename]}
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  margin: 8,
+                  borderWidth: profileImage === filename ? 2 : 0,
+                  borderColor: "#256E51"
+                }}
+              />
+            </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         <View style={styles.form}>
