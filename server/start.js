@@ -1,8 +1,7 @@
 require("dotenv").config(); // Load environment variables
 const { Client, GatewayIntentBits } = require("discord.js");
-const { db } = require("./firebaseAdmin");
+import { db } from "./firebaseAdmin.js";
 
-// Discord bot token from .env
 const botToken = process.env.DISCORD_BOT_TOKEN;
 
 if (!botToken) {
@@ -10,7 +9,6 @@ if (!botToken) {
   process.exit(1);
 }
 
-// Create Discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -19,7 +17,6 @@ client.once("ready", () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
 });
 
-// Save new guild to Firestore
 client.on("guildCreate", async (guild) => {
   try {
     await db.collection("discordServers").doc(guild.id).set({
@@ -34,7 +31,6 @@ client.on("guildCreate", async (guild) => {
   }
 });
 
-// Remove guild from Firestore
 client.on("guildDelete", async (guild) => {
   try {
     await db.collection("discordServers").doc(guild.id).delete();

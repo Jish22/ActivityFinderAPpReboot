@@ -1,9 +1,14 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
+import { readFileSync } from "fs";
 
-const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+// Load service account credentials from environment variable
+const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
-module.exports = admin;
+const db = admin.firestore();
+export { admin, db };
