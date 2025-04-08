@@ -17,6 +17,7 @@ import {
 } from "../services/organizationService";
 import { auth } from "../services/firebaseConfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { ORG_AVATAR_IMAGES } from "../constants/constants";
 
 const AddOrganizationScreen = ({ navigation }: any) => {
   const [organizations, setOrganizations] = useState<any[]>([]);
@@ -114,8 +115,12 @@ const AddOrganizationScreen = ({ navigation }: any) => {
         onPress={() => navigation.navigate("OrganizationProfileScreen", { org: item })}
       >
         <View style={styles.orgContent}>
-          <Image source={{ uri: item.profileImage || "https://firebasestorage.googleapis.com/v0/b/activityfinderapp-7ba1e.firebasestorage.app/o/default-avatar.png?alt=media&token=8c3ad483-e787-4900-9a4c-85d0b1868f3c" }} 
-          style={styles.orgPfp} />
+        <Image
+            source={
+              ORG_AVATAR_IMAGES[item.profileImage || "default-org-avatar.png"]
+            }
+            style={styles.orgPfp}
+          />
           <View style={styles.orgInfo}>
             <Text style={styles.orgName}>{item.name}</Text>
             <Text style={styles.orgDescription} numberOfLines={2}>

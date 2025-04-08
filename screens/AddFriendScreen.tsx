@@ -13,6 +13,9 @@ import {
 import { sendFriendRequest, searchUsersByName, searchUsersByNetID } from "../services/friendService";
 import { auth } from "../services/firebaseConfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { AVATAR_IMAGES } from "../constants/constants";
+
+
 const AddFriendScreen = ({ navigation }: any) => {
   const [nameQuery, setNameQuery] = useState(""); 
   const [netIDQuery, setNetIDQuery] = useState(""); 
@@ -127,12 +130,10 @@ const AddFriendScreen = ({ navigation }: any) => {
                     onPress={() => handleUserSelect(item)}
                   >
                     <Image 
-                      source={{ 
-                        uri: item.pfp
-                        ? item.pfp
-                        : "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                      }}
-                        style={styles.userImage} 
+                      source={
+                        AVATAR_IMAGES[item.profileImage] || AVATAR_IMAGES["default-avatar.png"]
+                      }
+                      style={styles.userImage} 
                     />
                     <View style={styles.userInfo}>
                       <Text style={styles.userName}>{item.fullName}</Text>

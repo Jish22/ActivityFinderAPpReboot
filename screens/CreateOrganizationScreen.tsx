@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from "react-native";
+import { ORG_AVATAR_IMAGES } from "../constants/constants";
 import * as ImagePicker from "expo-image-picker";
 import { createOrganization } from "../services/organizationService";
 import { auth } from "../services/firebaseConfig";
@@ -20,29 +21,30 @@ const CreateOrganizationScreen = ({ navigation }: any) => {
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState("default-org-avatar.png");
 
-  const handlePickImage = async () => {
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "We need access to your photos to upload a profile picture."
-      );
-      return;
-    }
+  // const handlePickImage = async () => {
+  //   const { status } =
+  //     await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== "granted") {
+  //     Alert.alert(
+  //       "Permission Denied",
+  //       "We need access to your photos to upload a profile picture."
+  //     );
+  //     return;
+  //   }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  //   const result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     allowsEditing: true,
+  //     aspect: [1, 1],
+  //     quality: 1,
+  //   });
 
-    if (!result.canceled && result.assets.length > 0) {
-      setProfileImage(result.assets[0].uri);
-    }
-  };
+  //   if (!result.canceled && result.assets.length > 0) {
+  //     setProfileImage(result.assets[0].uri);
+  //   }
+  // };
 
   const handleCreateOrganization = async () => {
     if (!orgName || !bio) {
@@ -62,7 +64,7 @@ const CreateOrganizationScreen = ({ navigation }: any) => {
       const orgData = {
         name: orgName,
         bio,
-        profileImage,
+        profileImage: selectedAvatar, 
         admins: [userId],
         members: [userId],
         superAdmin: userId,
@@ -93,17 +95,23 @@ const CreateOrganizationScreen = ({ navigation }: any) => {
           <Text style={styles.headerTitle}>Create Organization</Text>
         </View>
 
-        <TouchableOpacity onPress={handlePickImage} style={styles.imageContainer}>
-          <Image
-            source={
-              profileImage
-                ? { uri: profileImage }
-                : require("../assets/adaptive-icon.png")
-            }
-            style={styles.profileImage}
-          />
-          <Text style={styles.imageText}>Upload Profile Image</Text>
-        </TouchableOpacity>
+        <View style={styles.avatarScrollContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {Object.keys(ORG_AVATAR_IMAGES).map((filename) => (
+              <TouchableOpacity
+                key={filename}
+                onPress={() => setSelectedAvatar(filename)}
+                style={[
+                  styles.avatarOption,
+                  selectedAvatar === filename && styles.avatarSelected,
+                ]}
+              >
+                <Image source={ORG_AVATAR_IMAGES[filename]} style={styles.avatarImage} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <Text style={styles.imageText}>Choose an Organization Avatar</Text>
+        </View>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Organization Name</Text>
@@ -210,6 +218,24 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: "#A0AEC0",
+  },
+  avatarScrollContainer: {
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  avatarOption: {
+    marginHorizontal: 8,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  avatarSelected: {
+    borderColor: "#256E51",
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
 });
 

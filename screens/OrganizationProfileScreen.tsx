@@ -21,6 +21,7 @@ import {
   leaveOrganization,
   updateOrganizationProfileImage,
 } from "../services/organizationService";
+import { ORG_AVATAR_IMAGES, AVATAR_IMAGES } from "../constants/constants";
 import { getUserDetailsByUID } from "../services/firebaseConfig";
 import { getEventDetails, deleteEvent, getPastEvents } from "../services/eventService";
 import { auth } from "../services/firebaseConfig";
@@ -123,61 +124,6 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
     fetchOrganization();
   }, []);
 
-  const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "We need access to your photos to upload a profile picture."
-      );
-      return;
-    }
-  
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-  
-    if (!result.canceled && result.assets.length > 0) {
-      const selectedImage = result.assets[0].uri;
-      await uploadOrganizationImageToFirebase(selectedImage);
-    }
-  };
-  
-  const uploadOrganizationImageToFirebase = async (imageUri: string) => {
-    if (!organization) return;
-  
-    const storage = getStorage();
-    const imageId = uuidv4()
-    const storageRef = ref(storage, `organization_pictures/${organization.id}/${imageId}.jpg`);
-  
-    try {
-      const response = await fetch(imageUri);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-  
-      const blob = await response.blob();
-      const snapshot = await uploadBytes(storageRef, blob);
-      // console.log("Upload successful:", snapshot);
-  
-      const downloadURL = await getDownloadURL(storageRef);
-      setProfileImage(downloadURL); // ✅ Update state
-  
-      await updateOrganizationProfileImage(organization.id, downloadURL);
-  
-      Alert.alert("Success", "Organization profile picture updated!");
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      Alert.alert("Error", "Failed to upload image. Please try again.");
-      return null;
-    }
-  };
-
   const handlePromoteToAdmin = async (netID: string) => {
     try {
       await promoteToAdmin(organization.id, netID);
@@ -256,44 +202,67 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.profileSection}>
+        <View style={styles.profileSection}>
           <View style={styles.imageContainer}>
-          <TouchableOpacity onPress={handlePickImage} disabled={!isAdmin}>
-            <Image
-            source={{
-              uri: profileImage
-                ? profileImage
-                : "https://firebasestorage.googleapis.com/v0/b/activityfinderapp-7ba1e.firebasestorage.app/o/default-avatar.png?alt=media&token=8c3ad483-e787-4900-9a4c-85d0b1868f3c",
-}}              style={styles.profileImage}
-            />
-            {isAdmin && (
-              <View style={styles.editBadge}>
-                <Text style={styles.editBadgeText}>Edit</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>            
+              <Image
+                source={ORG_AVATAR_IMAGES[profileImage || "default-org-avatar.png"]}
+                style={styles.profileImage}
+              />
+          </View>     
+
         <Text style={styles.name}>{organization.name}</Text>
             
-            {isEditingBio ? (
-              <View style={styles.bioEditSection}>
-                <TextInput
-                  value={bioText}
-                  onChangeText={setBioText}
-                  style={styles.bioInput}
-                  multiline
-                  placeholder="Enter organization bio..."
-                />
+        {isEditingBio ? (
+          <View style={styles.bioEditSection}>
+            <TextInput
+              value={bioText}
+              onChangeText={setBioText}
+              style={styles.bioInput}
+              multiline
+              placeholder="Enter organization bio..."
+            />
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 16 }}>
+              {Object.entries(ORG_AVATAR_IMAGES).map(([filename, source]) => (
                 <TouchableOpacity
-                  style={styles.saveBioButton}
-                  onPress={handleSaveBio}
+                  key={filename}
+                  onPress={() => setProfileImage(filename)}
+                  style={{ marginRight: 12 }}
                 >
-                  <Text style={styles.saveBioButtonText}>Save Bio</Text>
+                  <Image
+                    source={source}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      borderWidth: profileImage === filename ? 2 : 0,
+                      borderColor: "#256E51",
+                    }}
+                  />
                 </TouchableOpacity>
-              </View>
-            ) : (
-              <Text style={styles.bio}>{organization.bio || "No bio yet"}</Text>
-            )}
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.saveBioButton}
+              onPress={async () => {
+                try {
+                  await updateOrganizationBio(organization.id, bioText);
+                  await updateOrganizationProfileImage(organization.id, profileImage);
+                  setIsEditingBio(false);
+                  setOrganization({ ...organization, bio: bioText, profileImage });
+                  Alert.alert("Success", "Changes saved!");
+                } catch (error) {
+                  Alert.alert("Error", "Failed to save changes.");
+                }
+              }}
+            >
+              <Text style={styles.saveBioButtonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.bio}>{organization.bio || "No bio yet"}</Text>
+        )}
           </View>
 
           <View style={styles.tabContainer}>
@@ -381,12 +350,13 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
             <Text style={styles.sectionTitle}>Admins</Text>
             {organization.admins.map((adminId: string) => (
               <View key={adminId} style={styles.memberCard}>
-                      <Image
-                    source={{
-                      uri: adminImages[adminId] || "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                    }}
-                    style={styles.profileImageSmall}
-                  />
+                <Image
+                  source={
+                    AVATAR_IMAGES[adminImages[adminId]] ||
+                    ORG_AVATAR_IMAGES[adminImages[adminId]] ||
+                    require("../assets/avatars/default-avatar.png")}
+                  style={styles.profileImageSmall}
+                />
                 <Text style={styles.memberName}>{adminNames[adminId] || "Loading..."}</Text>
                 <View style={styles.memberActions}>
                   {isSuperAdmin && adminId !== userNetID && (
@@ -416,12 +386,14 @@ const OrganizationProfileScreen = ({ route, navigation }: any) => {
               .filter((member: string) => !organization.admins.includes(member))
               .map((memberId: string) => (
                 <View key={memberId} style={styles.memberCard}>
-                  <Image
-                    source={{
-                      uri: memberImages[memberId] || "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                    }}
-                    style={styles.profileImageSmall}
-                  />
+                    <Image
+                      source={
+                        AVATAR_IMAGES[memberImages[memberId]] ||
+                        ORG_AVATAR_IMAGES[memberImages[memberId]] ||
+                        require("../assets/avatars/default-avatar.png")
+                      }
+                      style={styles.profileImageSmall}
+                    />
                   <Text style={styles.memberName}>{memberNames[memberId] || "Loading..."}</Text>
                   {isAdmin && (
                     <TouchableOpacity

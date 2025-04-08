@@ -22,6 +22,8 @@ import {
 import { acceptFriendRequest, declineFriendRequest } from "../services/friendService";
 import Entypo from '@expo/vector-icons/Entypo';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { AVATAR_IMAGES } from "../constants/constants";
+
 
 
 // Define interfaces for better type safety
@@ -50,7 +52,7 @@ const FriendRequestsScreen = ({ navigation }: any) => {
       return {
         netID,
         fullName: user?.fullName || "Unknown User",
-        profileImage: user?.profileImage || null,
+        profileImage: user?.profileImage || "default-avatar.png",
       };
     });
 
@@ -275,13 +277,8 @@ const FriendRequestsScreen = ({ navigation }: any) => {
             if (item.type === "friend") {
               return (
                 <View style={styles.requestCard}>
-                  {/* 🔥 Display Profile Image */}
                   <Image
-                    source={{
-                      uri: friendImages[item.netID]
-                        ? friendImages[item.netID]
-                        : "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/default-avatar.png?alt=media",
-                    }}
+                    source={AVATAR_IMAGES[friendImages[item.netID] || "default-avatar.png"]}
                     style={styles.profileImage}
                   />
           
@@ -334,15 +331,10 @@ const FriendRequestsScreen = ({ navigation }: any) => {
             if (item.type === "member") {
               return (
                 <View style={styles.requestCard}>
-                {/* 🔥 Display Profile Image for Pending Member */}
-                <Image
-                  source={{
-                    uri: memberImages[item.netID]
-                      ? memberImages[item.netID]
-                      : "https://firebasestorage.googleapis.com/v0/b/activityfinderapp-7ba1e.firebasestorage.app/o/default-avatar.png?alt=media&token=8c3ad483-e787-4900-9a4c-85d0b1868f3c",
-                  }}
-                  style={styles.profileImage}
-                />
+                  <Image
+                    source={AVATAR_IMAGES[memberImages[item.netID] || "default-avatar.png"]}
+                    style={styles.profileImage}
+                  />
           
                 <Text style={styles.requestText}>
                   Pending Member: {friendNames[item.netID] || "Loading..."}

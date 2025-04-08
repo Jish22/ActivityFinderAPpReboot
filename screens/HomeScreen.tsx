@@ -18,6 +18,7 @@ import { auth } from "../services/firebaseConfig";
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
+import { AVATAR_IMAGES, ORG_AVATAR_IMAGES } from "../constants/constants";
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -213,12 +214,14 @@ const HomeScreen = ({ navigation }: any) => {
             activeOpacity={0.7}
           >
             <View style={styles.eventCardContentRow}>
-              <Image
-                source={{
-                  uri: event.orgProfileImage || "https://firebasestorage.googleapis.com/v0/b/activityfinderapp-7ba1e.appspot.com/o/default-org.png?alt=media",
-                }}
-                style={styles.profileImage}
-              />
+            <Image
+              source={
+                AVATAR_IMAGES[event.orgProfileImage] ??
+                ORG_AVATAR_IMAGES[event.orgProfileImage] ??
+                require("../assets/avatars/default-avatar.png")
+              }
+              style={styles.profileImage}
+            />
               <View style={styles.eventTextBlock}>
                 <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
                   {event.name}
