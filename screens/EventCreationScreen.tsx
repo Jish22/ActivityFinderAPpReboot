@@ -119,14 +119,14 @@ const EventCreationScreen = ({ navigation }: any) => {
     if (hostedByOrg) {
       try {
         const org = await getOrganizationDetails(hostedByOrg);
-        orgProfileImage = org?.profileImage || "";
+        orgProfileImage = org?.profileImage || "default-org-avatar.png";
       } catch (error) {
         console.error("Failed to fetch org profile image:", error);
       }
     } else {
       try {
         const userProfile = await getUserProfile(userId);
-        orgProfileImage = userProfile?.profileImage || "";
+        orgProfileImage = userProfile?.profileImage || "default-avatar.png";
       } catch (error) {
         console.error("Failed to fetch user profile image:", error);
       }
