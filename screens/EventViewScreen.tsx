@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  RefreshControl,
 } from "react-native";
 import { rsvpToEvent, unRsvpFromEvent, isUserRSVPd, getEventAttendees } from "../services/eventService";
 import { getOrganizationDetails, getUserFullName } from "../services/organizationService";
@@ -16,7 +15,6 @@ import { format, toZonedTime } from "date-fns-tz";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { Linking } from "react-native";
-
 
 const EventViewScreen = ({ route, navigation }: any) => {
   const { event, fromFriendRequests } = route.params || {};
@@ -28,42 +26,51 @@ const EventViewScreen = ({ route, navigation }: any) => {
   const [isOrgAdmin, setIsOrgAdmin] = useState(false);
   const [attendees, setAttendees] = useState<any[]>([]);
   const [hostName, setHostName] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchAllEventData = async () => {
-    setRefreshing(true);
-  
-    if (userId) {
-      const status = await isUserRSVPd(event.id, userId);
-      setIsRSVPd(status);
-    }
-  
-    if (event.hostedByOrg) {
-      const orgDetails = await getOrganizationDetails(event.hostedByOrg);
-      if (orgDetails) {
-        setHostingOrg({ id: orgDetails.id, name: orgDetails.name });
-        setIsOrgAdmin(orgDetails.admins.includes(userId ?? ""));
-      }
-    } else if (event.createdBy) {
-      const name = await getUserFullName(event.createdBy);
-      setHostName(name);
-    }
-  
-    const isCreator = event.createdBy === userId && !event.hostedByOrg;
-    setIsEventCreator(isCreator);
-  
-    if (isCreator || isOrgAdmin) {
-      const attendeesList = await getEventAttendees(event.id);
-      setAttendees(attendeesList);
-    }
-  
-    setRefreshing(false);
-  };
 
   useEffect(() => {
-    fetchAllEventData();
-  }, []);
+    const fetchRSVPStatus = async () => {
+      if (userId) {
+        const status = await isUserRSVPd(event.id, userId);
+        setIsRSVPd(status);
+      }
+    };
 
+    fetchRSVPStatus();
+  }, [event.id, userId]); 
+
+  useEffect(() => {
+    const fetchHostingOrganization = async () => {
+      if (event.hostedByOrg) {
+        const orgDetails = await getOrganizationDetails(event.hostedByOrg);
+        if (orgDetails) {
+          setHostingOrg({ id: orgDetails.id, name: orgDetails.name });
+          setIsOrgAdmin(orgDetails.admins.includes(userId ?? ""));
+        } else {
+          setHostingOrg(null);
+        }
+      } else if (event.createdBy) {
+        const name = await getUserFullName(event.createdBy);
+        setHostName(name);
+      }
+    };
+
+    fetchHostingOrganization();
+  }, [event.hostedByOrg, userId]); 
+
+  useEffect(() => {
+    setIsEventCreator(event.createdBy === userId && !event.hostedByOrg);
+  }, [event.createdBy, userId, event.hostedByOrg]); // Runs only when event.creator changes
+
+  useEffect(() => {
+    const fetchAttendees = async () => {
+      if (event.id) {
+        const attendeesList = await getEventAttendees(event.id);
+        setAttendees(attendeesList);
+      }
+    };
+  
+    fetchAttendees();
+  }, [event.id]);
 
   const convertToCTTime = (utcTime: string) => {
     const timeZone = "America/Chicago";
@@ -124,15 +131,6 @@ const EventViewScreen = ({ route, navigation }: any) => {
             </TouchableOpacity>
           )}
         </View>
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={fetchAllEventData}
-            colors={["#256E51"]}
-            tintColor="#256E51"
-          />
-        }
-        
 
         <View style={styles.content}>
           <Text style={styles.eventTitle}>{event.name}</Text>
@@ -198,7 +196,7 @@ const EventViewScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          {(isEventCreator || isOrgAdmin) && attendees.length > 0 && (
+          {attendees.length > 0 && (
             <View style={styles.attendeesSection}>
               <Text style={styles.sectionTitle}>Attendees</Text>
               {attendees.map((attendee) => (
