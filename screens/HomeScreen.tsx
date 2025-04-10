@@ -24,7 +24,6 @@ const { width } = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
 const HomeScreen = ({ navigation }: any) => {
-  // Keeping all existing state
   const [events, setEvents] = useState<any>({
     yourEvents: [],
     discover: [],
@@ -45,12 +44,13 @@ const HomeScreen = ({ navigation }: any) => {
     friends: true,
   });
 
-  // Keeping all existing functions
   const fetchUserData = async () => {
     try {
       const userId = auth.currentUser?.uid;
       if (!userId) {
-        console.error("User not logged in");
+        if (__DEV__) {
+          console.error("User not logged in");
+        }
         return;
       }
 
@@ -68,7 +68,6 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
   
-  // Helper to dedupe by event ID
   const dedupeEvents = (existing: any[], incoming: any[]) => {
     const eventMap = new Map(existing.map(e => [e.id, e]));
     for (const event of incoming) {
@@ -91,7 +90,6 @@ const HomeScreen = ({ navigation }: any) => {
         PAGE_SIZE
       );
   
-      // Check if we're out of data
       const newHasMoreMap = {
         discover: result.discover.length === PAGE_SIZE,
         organizations: result.organizations.length === PAGE_SIZE,
@@ -127,10 +125,8 @@ const HomeScreen = ({ navigation }: any) => {
     for (const event of events) {
       const eventStartTime = new Date(event.startTime);
   
-      // Skip past events
       if (eventStartTime <= new Date()) continue;
   
-      // Notification 1: 1 hour before
       const oneHourBefore = new Date(eventStartTime.getTime() - 60 * 60 * 1000);
   
       if (oneHourBefore > new Date()) {
@@ -140,18 +136,23 @@ const HomeScreen = ({ navigation }: any) => {
             body: `"${event.name}" starts in 1 hour!`,
             sound: true,
           },
-          trigger: oneHourBefore,
+          trigger: {
+            type: 'date',
+            timestamp: oneHourBefore.getTime(),
+          } as any,
         });
       }
   
-      // Notification 2: at start time
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "🎉 It's Time!",
           body: `"${event.name}" is starting now.`,
           sound: true,
         },
-        trigger: eventStartTime,
+        trigger: {
+          type: 'date',
+          timestamp: eventStartTime.getTime(),
+        } as any,
       });
     }
   };
@@ -166,7 +167,6 @@ const HomeScreen = ({ navigation }: any) => {
   const loadMoreEvents = async () => {
     if (!isUserDataLoaded) return;
   
-    // Only load if any of the tabs still have more data
     if (hasMoreMap.discover || hasMoreMap.organizations || hasMoreMap.friends) {
       await fetchEvents(true);
     }

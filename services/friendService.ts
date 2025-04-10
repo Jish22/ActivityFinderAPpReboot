@@ -26,14 +26,16 @@ export const sendFriendRequest = async (recipientNetID: string, senderNetID: str
       if (recipientData.pendingFriendRequests?.includes(normalizedSenderNetID)) {
         throw new Error("A friend request is already pending.");
       }
-  
-      console.log("Friend request sent to:", normalizedRecipientNetID);
-
+      if (__DEV__) {
+        console.log("Friend request sent to:", normalizedRecipientNetID);
+      }
       await updateDoc(recipientRef, {
         pendingFriendRequests: arrayUnion(normalizedSenderNetID),
       });
-  
-      console.log("Friend request sent to:", normalizedRecipientNetID);
+      
+      if (__DEV__) {
+        console.log("Friend request sent to:", normalizedRecipientNetID);
+      }
     } catch (error) {
       console.error("Error sending friend request:", error);
       throw error;
@@ -52,8 +54,9 @@ export const acceptFriendRequest = async (recipientNetID: string, senderNetID: s
     await updateDoc(senderRef, {
       friends: arrayUnion(recipientNetID),
     });
-
-    console.log(`${recipientNetID} accepted friend request from ${senderNetID}`);
+    if (__DEV__) {
+      console.log(`${recipientNetID} accepted friend request from ${senderNetID}`);
+    }
   } catch (error) {
     console.error("Error accepting friend request:", error);
     throw error;
@@ -66,7 +69,9 @@ export const declineFriendRequest = async (recipientNetID: string, senderNetID: 
     await updateDoc(recipientRef, {
       pendingFriendRequests: arrayRemove(senderNetID),
     });
-    console.log(`${recipientNetID} declined friend request from ${senderNetID}`);
+    if (__DEV__) {
+      console.log(`${recipientNetID} declined friend request from ${senderNetID}`);
+    }
   } catch (error) {
     console.error("Error declining friend request:", error);
     throw error;

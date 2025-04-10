@@ -26,7 +26,6 @@ const db = getFirestore();
 const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any }) => {
   const { orgId } = route.params;
 
-  // ✅ State Variables
   const [searchText, setSearchText] = useState("");
   const [discordServers, setDiscordServers] = useState<any[]>([]);
   const [selectedServer, setSelectedServer] = useState<any>(null);
@@ -36,7 +35,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
   const [loading, setLoading] = useState(false);
   const [existingIntegration, setExistingIntegration] = useState<any>(null);
 
-  // ✅ Fetch Existing Integrations
   useEffect(() => {
     const fetchIntegrations = async () => {
       try {
@@ -45,7 +43,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
           const data = integrationDoc.data();
           setExistingIntegration(data);
 
-          // Pre-fill data
           if (data.discord) {
             setSelectedServer({
               guildId: data.discord.guildId,
@@ -70,7 +67,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
     fetchIntegrations();
   }, [orgId]);
 
-  // ✅ Search Discord Servers
   const searchDiscordServers = async () => {
     try {
       const q = query(
@@ -98,7 +94,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
     }
   }, [searchText]);
 
-  // ✅ Save GroupMe Integration
   const handleSaveGroupMeIntegration = async () => {
     if (!groupMeBotId) return;
 
@@ -110,7 +105,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
     });
   };
 
-  // ✅ Save Discord Integration
   const handleSaveDiscordIntegration = async () => {
     if (!selectedServer || !discordChannelId) {
       Alert.alert("Error", "Please select a Discord server and enter the channel ID.");
@@ -126,7 +120,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
     });
   };
 
-  // ✅ Save Slack Integration
   const handleSaveSlackIntegration = async () => {
     if (!slackWebhookUrl) return;
 
@@ -138,7 +131,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
     });
   };
 
-  // ✅ Save All Integrations
   const handleSaveIntegrations = async () => {
     setLoading(true);
     try {
@@ -163,7 +155,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* ✅ Header with Back Button and Help Button */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="black" />
@@ -178,7 +169,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        {/* ✅ Discord Section */}
         <Text style={styles.sectionTitle}>Discord Integration</Text>
         <TextInput
           style={styles.input}
@@ -214,7 +204,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
           </>
         )}
 
-        {/* ✅ GroupMe Section */}
         <Text style={styles.sectionTitle}>GroupMe Integration</Text>
         <TextInput
           style={styles.input}
@@ -224,7 +213,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
           autoCapitalize="none"
         />
 
-        {/* ✅ Slack Section */}
         <Text style={styles.sectionTitle}>Slack Integration</Text>
         <TextInput
           style={styles.input}
@@ -234,7 +222,6 @@ const IntegrationsScreen = ({ navigation, route }: { navigation: any; route: any
           autoCapitalize="none"
         />
 
-        {/* ✅ Save Button */}
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSaveIntegrations}

@@ -40,7 +40,6 @@ const AddFriendScreen = ({ navigation }: any) => {
 
   const fetchNameSearchResults = async () => {
     const results = await searchUsersByName(nameQuery);
-    // console.log("Search Results:", results); // 🔍 Debugging
 
     setSearchResults(results);
   };
@@ -52,9 +51,9 @@ const AddFriendScreen = ({ navigation }: any) => {
 
   const handleUserSelect = (user: any) => {
     setSelectedUser(user);
-    setNameQuery(user.fullName); // Autofill name
-    setNetIDQuery(user.netID); // Autofill NetID
-    setSearchResults([]); // Hide results after selection
+    setNameQuery(user.fullName); 
+    setNetIDQuery(user.netID); 
+    setSearchResults([]); 
   };
 
   const handleAddFriend = async () => {

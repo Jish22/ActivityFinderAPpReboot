@@ -47,7 +47,9 @@ export const requestToJoinOrganization = async (orgId: string, netID: string) =>
     await updateDoc(orgRef, {
       pendingMembers: arrayUnion(netID),
     });
-    console.log(`${netID} requested to join ${orgId}`);
+    if (__DEV__) {
+      console.log(`${netID} requested to join ${orgId}`);
+    }
   } catch (error) {
     console.error("Error requesting to join organization:", error);
     throw error;
@@ -72,8 +74,9 @@ export const leaveOrganization = async (orgId: string, netID: string) => {
     await updateDoc(userRef, {
       joinedOrganizations: arrayRemove(orgId),
     });
-    
-    console.log(`${netID} left ${orgId}`);
+    if (__DEV__) {
+      console.log(`${netID} left ${orgId}`);
+    }
   } catch (error) {
     console.error("Error leaving organization:", error);
     throw error;
@@ -219,8 +222,9 @@ export const approveEvent = async (orgId: string, eventId: string) => {
       pendingEvents: updatedPendingEvents,
       events: arrayUnion(eventId),
     });
-
-    console.log(`Event ${eventId} approved for ${orgId} and marked as approved`);
+    if (__DEV__) {
+      console.log(`Event ${eventId} approved for ${orgId} and marked as approved`);
+    }
   } catch (error) {
     console.error("Error approving event:", error);
     throw error;
@@ -237,8 +241,9 @@ export const declineEvent = async (orgId: string, eventId: string) => {
     });
 
     await deleteDoc(eventRef);
-
-    console.log(`Event ${eventId} declined and deleted for ${orgId}`);
+    if (__DEV__) {
+      console.log(`Event ${eventId} declined and deleted for ${orgId}`);
+    }
   } catch (error) {
     console.error("Error declining and deleting event:", error);
     throw error;
@@ -263,9 +268,9 @@ export const approveMember = async (orgId: string, netID: string) => {
     await updateDoc(userRef, {
       joinedOrganizations: arrayUnion(orgId),
     });
-
-
-    console.log(`Member ${netID} approved for ${orgId}`);
+    if (__DEV__) {
+      console.log(`Member ${netID} approved for ${orgId}`);
+    }
   } catch (error) {
     console.error("Error approving member:", error);
     throw error;
@@ -278,8 +283,9 @@ export const declineMember = async (orgId: string, netID: string) => {
     await updateDoc(orgRef, {
       pendingMembers: arrayRemove(netID),
     });
-
-    console.log(`Member ${netID} declined for ${orgId}`);
+    if (__DEV__) {
+      console.log(`Member ${netID} declined for ${orgId}`);
+    }
   } catch (error) {
     console.error("Error declining member:", error);
     throw error;
@@ -292,7 +298,9 @@ export const promoteToAdmin = async (orgId: string, netID: string) => {
     await updateDoc(orgRef, {
       admins: arrayUnion(netID),
     });
-    console.log(`Member ${netID} promoted to admin in ${orgId}`);
+    if (__DEV__) {
+      console.log(`Member ${netID} promoted to admin in ${orgId}`);
+    }
   } catch (error) {
     console.error("Error promoting to admin:", error);
     throw error;
@@ -305,7 +313,9 @@ export const demoteAdmin = async (orgId: string, netID: string) => {
     await updateDoc(orgRef, {
       admins: arrayRemove(netID),
     });
-    console.log(`Admin ${netID} demoted to member in ${orgId}`);
+    if (__DEV__) {
+      console.log(`Admin ${netID} demoted to member in ${orgId}`);
+    }
   } catch (error) {
     console.error("Error demoting admin:", error);
     throw error;
@@ -327,8 +337,9 @@ export const transferSuperAdmin = async (orgId: string, newSuperAdminID: string,
       superAdmin: newSuperAdminID,
       admins: arrayUnion(oldSuperAdminID), 
     });
-
-    console.log(`Super Admin role transferred to ${newSuperAdminID} in ${orgId}`);
+    if (__DEV__) {
+      console.log(`Super Admin role transferred to ${newSuperAdminID} in ${orgId}`);
+    }
   } catch (error) {
     console.error("Error transferring Super Admin role:", error);
     throw error;
@@ -387,8 +398,9 @@ export const cancelJoinRequest = async (orgId: string, netID: string) => {
     await updateDoc(orgRef, {
       pendingMembers: arrayRemove(netID), 
     });
-
-    console.log(`Join request canceled for organization: ${orgId}, User: ${netID}`);
+    if (__DEV__) {
+      console.log(`Join request canceled for organization: ${orgId}, User: ${netID}`);
+    }
   } catch (error) {
     console.error("Error canceling join request:", error);
     throw error;
@@ -400,7 +412,9 @@ export const updateOrganizationProfileImage = async (orgId: string, imageUrl: st
   const orgRef = doc(db, "organizations", orgId);
   try {
     await updateDoc(orgRef, { profileImage: imageUrl });
-    console.log("Organization profile image updated successfully!");
+    if (__DEV__) {
+      console.log("Organization profile image updated successfully!");
+    }
   } catch (error) {
     console.error("Error updating organization profile image:", error);
     throw error;

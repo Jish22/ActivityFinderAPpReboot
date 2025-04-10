@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, ActivityIndicator, Alert, Text} from "react-native";
 import { auth } from "../services/firebaseConfig"
 import { onAuthStateChanged } from "firebase/auth";
@@ -9,13 +9,13 @@ const AuthLoadingScreen = ({ navigation }: any) => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         console.log("Auth state changed:", user);        if (user) {
           if (user.emailVerified) {
-            navigation.replace("HomeScreen"); // Allow access
+            navigation.replace("HomeScreen"); 
           } else {
             Alert.alert("Email not verified", "Please check your email for verification.");
-            navigation.replace("WelcomeScreen"); // Redirect if not verified
+            navigation.replace("WelcomeScreen"); 
           }
         } else {
-          navigation.replace("WelcomeScreen"); // Redirect to login/signup
+          navigation.replace("WelcomeScreen"); 
         }
       });
   

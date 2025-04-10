@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -53,22 +53,6 @@ const EditEventScreen = ({ route, navigation }: any) => {
       );
     };
   
-    const start = createDateTime(updatedEvent.date, updatedEvent.startTime);
-    const end = createDateTime(updatedEvent.date, updatedEvent.endTime);
-    const now = new Date();
-  
-    // 👇 Check if start or end time is in the past
-    if (start < now || end < now) {
-      Alert.alert("Invalid Time", "You cannot schedule an event in the past.");
-      return;
-    }
-  
-    // 👇 Optional: Check if end is before start
-    if (end <= start) {
-      Alert.alert("Invalid Time", "End time must be after start time.");
-      return;
-    }
-  
     const convertLocalToUtcISOString = (date: string, time: string, timeZone = "America/Chicago") => {
       const dateObj = new Date(date);
       const timeObj = new Date(time);
@@ -76,6 +60,22 @@ const EditEventScreen = ({ route, navigation }: any) => {
       const utcDate = fromZonedTime(localDateTimeStr, timeZone);
       return utcDate.toISOString();
     };
+    
+    // const start = createDateTime(updatedEvent.date, updatedEvent.startTime);
+    // const end = createDateTime(updatedEvent.date, updatedEvent.endTime);
+    const start = new Date(convertLocalToUtcISOString(updatedEvent.date, updatedEvent.startTime));
+    const end = new Date(convertLocalToUtcISOString(updatedEvent.date, updatedEvent.endTime));
+    const now = new Date();
+  
+    if (start < now || end < now) {
+      Alert.alert("Invalid Time", "You cannot schedule an event in the past.");
+      return;
+    }
+  
+    if (end <= start) {
+      Alert.alert("Invalid Time", "End time must be after start time.");
+      return;
+    }
   
     setLoading(true);
     try {
@@ -88,7 +88,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
       });
   
       Alert.alert("Success", "Event updated.");
-      navigation.goBack();
+      navigation.navigate("HomeScreen");
     } catch (error) {
       Alert.alert("Error", "Failed to update event.");
     } finally {
@@ -107,7 +107,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
           try {
             await deleteEvent(event.id, null);
             Alert.alert("Deleted", "Event has been deleted.");
-            navigation.goBack();
+            navigation.navigate("HomeScreen");
           } catch (error) {
             Alert.alert("Error", "Failed to delete event.");
           }
@@ -166,7 +166,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                  timeZone: 'America/Chicago' // Ensuring Central Time
+                  timeZone: 'America/Chicago' 
                 }).format(new Date(updatedEvent.date).setDate(new Date(updatedEvent.date).getDate() + 1))}
               </Text>
             </TouchableOpacity>
@@ -228,7 +228,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
                         selectedTime.getDate(),
                         selectedTime.getHours(),
                         selectedTime.getMinutes()
-                      ); // Keeps local time without shifting
+                      ); 
                   
                       setUpdatedEvent((prev) => ({
                         ...prev,

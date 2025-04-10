@@ -29,7 +29,9 @@ export const saveUserProfile = async (userId: string, profileData: any) => {
     };
 
     await setDoc(doc(db, "users", userId), normalizedProfileData, { merge: true });
-    console.log("Profile saved successfully with normalized netID");
+    if (__DEV__) {
+      console.log("Profile saved successfully with normalized netID");
+    }
   } catch (error) {
     console.error("Error saving profile:", error);
     throw error;

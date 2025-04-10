@@ -16,7 +16,7 @@ import { saveUserProfile, getUserProfile } from "../services/firebaseConfig";
 import { auth } from "../services/firebaseConfig";
 import { INTEREST_CATEGORIES, AVATAR_IMAGES } from "../constants/constants";
 import { signOut } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import Firebase Storage
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; 
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -59,7 +59,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
     fetchProfile();
   }, []);
 
-  // Keeping all the existing validation and handler functions
   const validateNetID = () => {
     if (!email.endsWith("@illinois.edu")) {
       setErrorMessage("Email must end with @illinois.edu.");
@@ -104,7 +103,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
         netID,
         profileImage,
         interests,
-        // ✅ Preserve existing arrays if user already exists
         pendingFriendRequests: existingProfile?.pendingFriendRequests ?? [],
         friends: existingProfile?.friends ?? [],
         joinedOrganizations: existingProfile?.joinedOrganizations ?? [],
@@ -113,7 +111,7 @@ const ProfileSetupScreen = ({ navigation }: any) => {
       await saveUserProfile(userId, profileData);
   
       Alert.alert("Success", "Profile saved successfully!", [
-        { text: "OK", onPress: () => navigation.goBack() },
+        { text: "OK", onPress: () => navigation.navigate("HomeScreen") }
       ]);
     } catch (error: unknown) {
       console.error("Error saving profile:", error);
@@ -122,7 +120,7 @@ const ProfileSetupScreen = ({ navigation }: any) => {
       }
     }
   };
-
+ 
   const toggleInterest = (interest: string) => {
     setSelectedInterests((prev) =>
       prev.includes(interest)
@@ -135,7 +133,7 @@ const ProfileSetupScreen = ({ navigation }: any) => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      navigation.replace("WelcomeScreen"); // Redirect to Welcome screen after signing out
+      navigation.replace("WelcomeScreen"); 
     } catch (error) {
       Alert.alert("Error", "Failed to sign out.");
     }
@@ -213,22 +211,6 @@ const ProfileSetupScreen = ({ navigation }: any) => {
             />
           </View>
 
-          {/* <View style={styles.inputGroup}>
-            <Text style={styles.label}>Gender*</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={gender}
-                onValueChange={(itemValue) => setGender(itemValue)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Gender" value="" />
-                <Picker.Item label="Male" value="Male" />
-                <Picker.Item label="Female" value="Female" />
-                <Picker.Item label="Non-Binary" value="Non-Binary" />
-              </Picker>
-            </View>
-          </View> */}
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Graduation Year*</Text>
             <TextInput
@@ -240,13 +222,11 @@ const ProfileSetupScreen = ({ navigation }: any) => {
             />
           </View>
 
-          {/* ✅ Email (Read-Only) */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email*</Text>
             <TextInput value={email} style={styles.input} editable={false} placeholder="Email" />
           </View>
 
-          {/* ✅ NetID (Read-Only) */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>NetID*</Text>
             <TextInput value={netID} style={styles.input} editable={false} placeholder="NetID" />

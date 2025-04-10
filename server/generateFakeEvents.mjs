@@ -5,9 +5,8 @@ import { randomUUID } from "crypto";
 import { faker } from '@faker-js/faker';
 
 
-// FIREBASE ADMIN INIT (update path if needed)
 import { readFileSync } from "fs";
-const serviceAccount = JSON.parse(readFileSync("./config/firebase-admin.json", "utf-8"));
+const serviceAccount = JSON.parse(readFileSync("server/config/firebase-admin.json", "utf-8"));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -62,8 +61,8 @@ export const AVATAR_FILENAMES = [
 
   const getRandomFromArray = (arr, count) => {
     return [...arr]
-      .sort(() => 0.5 - Math.random()) // shuffle the array
-      .slice(0, count); // take the first 'count' items
+      .sort(() => 0.5 - Math.random()) 
+      .slice(0, count); 
   };
   
   const generateUsers = async () => {

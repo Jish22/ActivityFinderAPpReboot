@@ -33,7 +33,6 @@ const LoginScreen = ({ navigation }: any) => {
       const user = userCredential.user;
 
       if (user.emailVerified) {
-        // console.log("User logged in with Email:", user);
         const userProfile = await getUserProfile(user.uid);
         
         if (userProfile) {

@@ -21,7 +21,9 @@ export const createEvent = async (eventData: any) => {
       await updateDoc(orgRef, {
         pendingEvents: arrayUnion(eventRef.id),
       });
-      console.log(`Event submitted for approval under org: ${eventData.hostedByOrg}`);
+      if (__DEV__) {
+        console.log(`Event submitted for approval under org: ${eventData.hostedByOrg}`);
+      }
     } else {
 
       const userId = auth.currentUser?.uid;
@@ -30,7 +32,9 @@ export const createEvent = async (eventData: any) => {
         await updateDoc(userRef, {
           yourEvents: arrayUnion(eventRef.id),
         });
-        console.log(`Event added to user's events: ${eventRef.id}`);
+        if (__DEV__) {
+          console.log(`Event added to user's events: ${eventRef.id}`);
+        }
       }
     }
 
@@ -64,7 +68,9 @@ export const getUserProfile = async (userId: string) => {
       if (docSnap.exists()) {
         return docSnap.data();
       } else {
-        console.log("No such document!");
+        if (__DEV__) {
+          console.log("No such document!");
+        }
         return null;
       }
     } catch (error) {
@@ -91,8 +97,9 @@ export const getUserProfile = async (userId: string) => {
       await updateDoc(userRef, {
         yourEvents: arrayUnion(eventId),
       });
-  
-      console.log(`User ${userId} successfully RSVP'd to event ${eventId}`);
+      if (__DEV__) {
+        console.log(`User ${userId} successfully RSVP'd to event ${eventId}`);
+      }
       return true;
     } catch (error) {
       console.error("Error RSVPing to event:", error);
@@ -206,7 +213,9 @@ export const getFilteredEvents = async (
     );
     const popularSnap = await getDocs(popularQuery);
     const popularEvents = popularSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    console.log(popularEvents)
+    if (__DEV__) {
+      console.log(popularEvents)
+    }
 
     const [discoverSnap, organizationSnap, friendsCreatedSnap, friendsAttendingSnap] = await Promise.all(queries);
 
@@ -316,14 +325,18 @@ export const deleteEvent = async (eventId: string, orgId: string | null) => {
   try {
     const eventRef = doc(db, "events", eventId);
     await deleteDoc(eventRef);
-    console.log(`Event ${eventId} deleted.`);
+    if (__DEV__) {
+      console.log(`Event ${eventId} deleted.`);
+    }
 
     if (orgId) {
       const orgRef = doc(db, "organizations", orgId);
       await updateDoc(orgRef, {
         events: arrayRemove(eventId),
       });
-      console.log(`Event ${eventId} removed from organization ${orgId}.`);
+      if (__DEV__) {
+        console.log(`Event ${eventId} removed from organization ${orgId}.`);
+      }
     }
   } catch (error) {
     console.error("Error deleting event:", error);
@@ -335,7 +348,9 @@ export const editEvent = async (eventId: string, updatedData: any) => {
   try {
     const eventRef = doc(db, "events", eventId);
     await updateDoc(eventRef, updatedData);
-    console.log(`Event ${eventId} updated.`);
+    if (__DEV__) {
+      console.log(`Event ${eventId} updated.`);
+    }
   } catch (error) {
     console.error("Error updating event:", error);
     throw error;
@@ -378,19 +393,24 @@ export const isUserRSVPd = async (eventId: string, userId: string) => {
 
 import { enableIndexedDbPersistence, disableNetwork, enableNetwork } from "firebase/firestore";
 export const getEventAttendees = async (eventId: string) => {
-  console.log("🔵 Entering getEventAttendees function with eventId:", eventId); 
+  if (__DEV__) {
+    console.log("🔵 Entering getEventAttendees function with eventId:", eventId); 
+  }
 
   try {
     const eventRef = doc(db, "events", eventId);
-    console.log("📌 Fetching event document from Firestore..."); 
+    if (__DEV__) {
+      console.log("📌 Fetching event document from Firestore..."); 
+    }
     const eventSnap = await getDoc(eventRef);
 
     if (!eventSnap.exists()) {
       console.error("❌ Event does not exist in Firestore.");
       return [];
     }
-
-    console.log("Event found! Data:", eventSnap.data()); 
+    if (__DEV__) {
+      console.log("Event found! Data:", eventSnap.data()); 
+    }
 
     const eventData = eventSnap.data();
     const attendeeIds = eventData.attendees || [];
@@ -401,15 +421,21 @@ export const getEventAttendees = async (eventId: string) => {
     }
 
     if (attendeeIds.length === 0) {
-      console.log("No attendees found for this event.");
+      if (__DEV__) {
+        console.log("No attendees found for this event.");
+      }
       return [];
     }
 
-    console.log("Fetching attendees' details...");
+    if (__DEV__) {
+      console.log("Fetching attendees' details...");
+    }
 
     const attendees = await Promise.all(
       attendeeIds.map(async (userId: string) => {
-        console.log(`📌 Fetching user: ${userId}`);
+        if (__DEV__) {
+          console.log(`📌 Fetching user: ${userId}`);
+        }
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
 
@@ -425,8 +451,9 @@ export const getEventAttendees = async (eventId: string) => {
         }
       })
     );
-
-    console.log("✅ Successfully fetched attendees:", attendees);
+    if (__DEV__) {
+      console.log("✅ Successfully fetched attendees:", attendees);
+    }
     return attendees;
   } catch (error) {
     console.error("❌ Error fetching event attendees:", error);

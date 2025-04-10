@@ -11,7 +11,6 @@ import {
   ScrollView,
 } from "react-native";
 import { ORG_AVATAR_IMAGES } from "../constants/constants";
-import * as ImagePicker from "expo-image-picker";
 import { createOrganization } from "../services/organizationService";
 import { auth } from "../services/firebaseConfig";
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -22,29 +21,6 @@ const CreateOrganizationScreen = ({ navigation }: any) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("default-org-avatar.png");
-
-  // const handlePickImage = async () => {
-  //   const { status } =
-  //     await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //   if (status !== "granted") {
-  //     Alert.alert(
-  //       "Permission Denied",
-  //       "We need access to your photos to upload a profile picture."
-  //     );
-  //     return;
-  //   }
-
-  //   const result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     aspect: [1, 1],
-  //     quality: 1,
-  //   });
-
-  //   if (!result.canceled && result.assets.length > 0) {
-  //     setProfileImage(result.assets[0].uri);
-  //   }
-  // };
 
   const handleCreateOrganization = async () => {
     if (!orgName || !bio) {
